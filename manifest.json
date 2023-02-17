@@ -1,0 +1,26 @@
+{
+  "name": "Trademap",
+  "version": "0.1.0",
+  "description": "Download HSCodes",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["*://*/*"],
+  "background": {
+    "service_worker": "./js/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": ["./js/contentScript.js"]
+    }
+  ],
+  "action": {
+    "default_icon": {
+      "16": "./assets/icon.png",
+      "24": "./assets/icon.png",
+      "32": "./assets/icon.png"
+    },
+    "default_title": "Trademap",
+    "default_popup": "popup.html"
+  },
+  "manifest_version": 3
+}
