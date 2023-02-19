@@ -32,6 +32,6 @@ chrome.downloads.onDeterminingFilename.addListener(function (item, suggest) {
     const urlParameters = new URLSearchParams(queryParameters);
     const hsCode = urlParameters.get("nvpm").split("|")[5];
 
-    suggest({ filename: `${hsCode}.xlsx`, overwrite: true });
+    suggest({ filename: `${hsCode}.xls`, overwrite: true });
   } catch {}
 });
