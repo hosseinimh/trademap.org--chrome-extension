@@ -25,3 +25,13 @@ chrome.runtime.onMessage.addListener((obj) => {
     openTab(`https://www.trademap.org/Country_SelProduct_TS.aspx?nvpm=1%7c%7c%7c%7c%7c${obj.code}%7c%7c%7c2%7c1%7c1%7c1%7c2%7c1%7c2%7c1%7c1%7c1`);
   }
 });
+
+chrome.downloads.onDeterminingFilename.addListener(function (item, suggest) {
+  try {
+    const queryParameters = item.finalUrl.split("?")[1];
+    const urlParameters = new URLSearchParams(queryParameters);
+    const hsCode = urlParameters.get("nvpm").split("|")[5];
+
+    suggest({ filename: `${hsCode}.xlsx`, overwrite: true });
+  } catch {}
+});

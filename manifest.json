@@ -2,7 +2,7 @@
   "name": "Trademap",
   "version": "0.1.0",
   "description": "Download HSCodes",
-  "permissions": ["storage", "tabs"],
+  "permissions": ["storage", "tabs", "downloads"],
   "host_permissions": ["*://*/*"],
   "background": {
     "service_worker": "./js/background.js"
