@@ -7,22 +7,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trademap</title>
     <link rel="stylesheet" href="./css/bs/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="./css/app.css" type="text/css" />
     <script src="./js/popup.js" type="module"></script>
 </head>
 
 <body>
-    <div class="container mx-2">
+    <div class="container">
         <div class="row mt-2 mb-2">
-            <div class="col-12 mb-2">
-                <label for="hscode">HS Code:</label>
-            </div>
             <div class="col-12">
-                <input id="hscode" type="text" value="08" />
-            </div>
-        </div>
-        <div class="row">
-            <div class="d-grid gap-2 col-8 mx-auto mb-2">
-                <button id="search" class="btn btn-primary">Search</button>
+                <div class="mb-4">
+                    <label for="type" class="form-label">Imports / Exports</label>
+                    <select id="type" class="form-select">
+                        <option value="1">Imports</option>
+                        <option value="2">Exports</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="hscode" class="form-label">HS code</label>
+                    <input id="hscode" type="text" class="form-control" value="08" />
+                    <div id="hscode-alert" class="alert alert-danger mt-2 d-none" role="alert">
+                    </div>
+                </div>
+                <div class="d-grid gap-2 col-8 mx-auto mb-2">
+                    <button id="search" class="btn btn-primary">Search</button>
+                </div>
             </div>
         </div>
     </div>

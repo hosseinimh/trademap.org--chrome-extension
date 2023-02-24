@@ -1,38 +1,29 @@
-(() => {
-  chrome.runtime.onMessage.addListener(async (obj) => {
-    if (obj?.type === "OPENED") {
-      const select = document.getElementById("ctl00_NavigationControl_DropDownList_Product");
+let MESSAGE_TYPES, getStorageItem, setStorageItem, sleep;
 
-      if (select && !isNaN(select.value)) {
-        const subOptions = [...select.options].filter((option) => option.value.startsWith(select.value) && option.value.length === 4);
-        const subValues = [...subOptions].map((option) => option.value);
-        const excelBtn = document.getElementById("ctl00_PageContent_GridViewPanelControl_ImageButton_ExportExcel");
-
-        excelBtn.click();
-        await sleep(2000);
-
-        chrome.storage.sync.get(["hsCodes"], (data) => {
-          const hsCodes = [...new Set([...data["hsCodes"], select.value, ...subValues])];
-          chrome.storage.sync.set({ ["hsCodes"]: hsCodes });
-
-          chrome.storage.sync.get(["downloadedHsCodes"], (downloadedData) => {
-            const downloadedHsCodes = [...new Set([...downloadedData["downloadedHsCodes"], select.value])];
-            chrome.storage.sync.set({ ["downloadedHsCodes"]: downloadedHsCodes });
-
-            const codes = hsCodes.filter((code) => !downloadedHsCodes.includes(code));
-
-            if (codes?.length > 0) {
-              chrome.storage.sync.set({ ["downloadedHsCodes"]: [...new Set([...downloadedHsCodes, codes[0]])] });
-              chrome.runtime.sendMessage({
-                message: "OPEN",
-                code: codes[0],
-              });
-            }
-          });
-        });
-      }
-    }
-  });
+(async () => {
+  const utils = chrome.runtime.getURL("js/utils.js");
+  ({ MESSAGE_TYPES, getStorageItem, setStorageItem, sleep } = await import(utils));
 })();
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+chrome.runtime.onMessage.addListener(async ({ message }) => {
+  if (message === MESSAGE_TYPES.TAB_OPENED) {
+    while (document.getElementsByTagName("body")[0].className != "vsc-initialized") {
+      await sleep(1000);
+    }
+
+    const select = document.getElementById("ctl00_NavigationControl_DropDownList_Product");
+
+    if (isNaN(select?.value)) {
+      return;
+    }
+
+    const subValues = [...select.options].filter((option) => option.value.startsWith(select.value) && option.value.length === select.value.length + 2).map((option) => option.value);
+    const hsCodes = await getStorageItem("hsCodes");
+    const downloadedHsCodes = await getStorageItem("downloadedHsCodes");
+    const excelBtn = document.getElementById("ctl00_PageContent_GridViewPanelControl_ImageButton_ExportExcel");
+
+    excelBtn.click();
+    await setStorageItem("hsCodes", [...hsCodes, select.value, ...subValues]);
+    await setStorageItem("downloadedHsCodes", [...downloadedHsCodes, select.value]);
+  }
+});
