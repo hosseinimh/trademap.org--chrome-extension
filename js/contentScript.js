@@ -1,16 +1,14 @@
 let MESSAGE_TYPES, getStorageItem, setStorageItem, sleep;
 
-(async () => {
+const loadUtils = async () => {
   const utils = chrome.runtime.getURL("js/utils.js");
   ({ MESSAGE_TYPES, getStorageItem, setStorageItem, sleep } = await import(utils));
-})();
+};
 
 chrome.runtime.onMessage.addListener(async ({ message }) => {
-  if (message === MESSAGE_TYPES.TAB_OPENED) {
-    while (document.getElementsByTagName("body")[0].className != "vsc-initialized") {
-      await sleep(1000);
-    }
+  await loadUtils();
 
+  if (message === MESSAGE_TYPES.TAB_OPENED) {
     const select = document.getElementById("ctl00_NavigationControl_DropDownList_Product");
 
     if (isNaN(select?.value)) {
@@ -22,6 +20,7 @@ chrome.runtime.onMessage.addListener(async ({ message }) => {
     const downloadedHsCodes = await getStorageItem("downloadedHsCodes");
     const excelBtn = document.getElementById("ctl00_PageContent_GridViewPanelControl_ImageButton_ExportExcel");
 
+    await sleep(5000);
     excelBtn.click();
     await setStorageItem("hsCodes", [...hsCodes, select.value, ...subValues]);
     await setStorageItem("downloadedHsCodes", [...downloadedHsCodes, select.value]);

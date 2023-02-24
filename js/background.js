@@ -28,7 +28,7 @@ chrome.downloads.onChanged.addListener(async ({ state }) => {
     const code = hsCodes.filter((code) => !downloadedHsCodes.includes(code))[0];
 
     if (code) {
-      await sleep(2000);
+      await sleep(5000);
       await openTab(`${BASE_URL}?nvpm=1%7c%7c%7c%7c%7c${code}%7c%7c%7c2%7c1%7c1%7c${type}%7c2%7c1%7c2%7c1%7c1%7c1`);
     }
   }

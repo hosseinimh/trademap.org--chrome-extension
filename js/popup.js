@@ -1,4 +1,4 @@
-import { openTab, setStorageItem } from "./utils.js";
+import { BASE_URL, openTab, setStorageItem } from "./utils.js";
 
 const validate = (hsCode) => {
   if (isNaN(hsCode) || (hsCode.length !== 2 && hsCode.length !== 4)) {
@@ -14,7 +14,7 @@ const validate = (hsCode) => {
   return true;
 };
 const openTrademap = async (hsCode, type) => {
-  await openTab(`https://www.trademap.org/Country_SelProduct_TS.aspx?nvpm=1%7c%7c%7c%7c%7c${hsCode}%7c%7c%7c2%7c1%7c1%7c${type}%7c2%7c1%7c2%7c1%7c1%7c1`);
+  await openTab(`${BASE_URL}?nvpm=1%7c%7c%7c%7c%7c${hsCode}%7c%7c%7c2%7c1%7c1%7c${type}%7c2%7c1%7c2%7c1%7c1%7c1`);
 };
 
 const search = async () => {
