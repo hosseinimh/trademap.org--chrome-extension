@@ -1,33 +1,119 @@
 const loadUtils = async () => {
   const utils = chrome.runtime.getURL("js/utils.js");
-  ({ MESSAGE_TYPES, WAITING_TIME, getStorageItem, setStorageItem, sleep, unique, copyTextToClipboard } = await import(utils));
+  ({
+    SEARCH_TYPES,
+    MESSAGE_TYPES,
+    getStorageItem,
+    setStorageItem,
+    unique,
+    copyTextToClipboard,
+    $,
+  } = await import(utils));
 };
+
+chrome.runtime.onMessage.addListener(async ({ message, content }) => {
+  await loadUtils();
+  if (message === MESSAGE_TYPES.TAB_OPENED) {
+    await onTabOpened();
+  } else if (message === MESSAGE_TYPES.COPY_CLIPBOARD) {
+    const hsCode = await getStorageItem("hsCode");
+    const hsCodes = await getStorageItem("hsCodes");
+    const downloadedHsCodes = await getStorageItem("downloadedHsCodes");
+    await copyTextToClipboard(content);
+    showDownloadProgress(hsCodes, downloadedHsCodes);
+    showDownloadedFiles(hsCode, hsCodes, downloadedHsCodes);
+  }
+});
+
+const onTabOpened = async () => {
+  const searchType = await getStorageItem("searchType");
+  if (searchType === SEARCH_TYPES.DOWNLOADED) {
+    await handleDownloadedHsCodes();
+  }
+  const hsCode = await getStorageItem("hsCode");
+  const hsCodes = await getStorageItem("hsCodes");
+  const downloadedHsCodes = await getStorageItem("downloadedHsCodes");
+
+  const exportType = await getStorageItem("exportType");
+  await showDownloadProgress(hsCodes, downloadedHsCodes);
+  showDownloadedFiles(hsCode, hsCodes, downloadedHsCodes);
+  await extractPeriod();
+
+  if (
+    searchType === SEARCH_TYPES.DOWNLOADED &&
+    downloadedHsCodes.includes(hsCode)
+  ) {
+    console.log("skipped");
+    chrome.runtime.sendMessage(MESSAGE_TYPES.SKIP_DOWNLOAD);
+    return;
+  }
+  handleDownloadClick(exportType);
+};
+
+const handleDownloadedHsCodes = async () => {
+  const select = $("ctl00_NavigationControl_DropDownList_Product");
+  const subValues = [...select.options]
+    .filter((option) => option.value.startsWith(select.value))
+    .map((option) => option.value);
+  const hsCodes = unique([
+    ...(await getStorageItem("hsCodes")),
+    select.value,
+    ...subValues,
+  ]);
+  await setStorageItem("hsCodes", hsCodes);
+};
+
+const handleSpecificHsCodes = async () => {};
 
 const showDownloadProgress = async (hsCodes, downloadedHsCodes) => {
   try {
-    let percent = Math.floor(((downloadedHsCodes?.length ?? 0) * 100) / hsCodes?.length ?? 1);
-    const progress = `<div class="progress">
-  <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: ${percent > 0 ? percent : 5}%" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100">${percent}%</div>
+    const container = $("div_TradeMap");
+    let progress =
+      container.getElementsByClassName("progress-extension").length > 0
+        ? container.getElementsByClassName("progress-extension")[0]
+        : null;
+    if (progress) {
+      container.removeChild(progress);
+    }
+    let percent = Math.floor(
+      ((downloadedHsCodes?.length ?? 0) * 100) / hsCodes?.length ?? 1
+    );
+    progress = `<div class="progress progress-extension">
+  <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: ${
+    percent > 0 ? percent : 5
+  }%" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100">${percent}%</div>
 </div>`;
-    document.getElementById("div_TradeMap").innerHTML += progress;
+    container.innerHTML += progress;
   } catch {}
 };
 
-const showDownloadedFiles = (selectValue, hsCodes, downloadedHsCodes) => {
+const showDownloadedFiles = (currentHsCode, hsCodes, downloadedHsCodes) => {
   try {
-    const container = document.getElementById("div_container");
-    let content = `<ul class="list-group" style="position: fixed; right: 0; bottom: 0; height: 20rem; overflow-y: scroll;"><li class="list-group-item"><button id="copy_hs_codes" type="button" class="btn btn-primary">Copy HS Codes</button></li>`;
+    const container = $("div_container");
+    let list =
+      container.getElementsByClassName("list-extension").length > 0
+        ? container.getElementsByClassName("list-extension")[0]
+        : null;
+    if (list) {
+      container.removeChild(list);
+    }
+    list = `<ul class="list-group list-extension" style="position: fixed; right: 0; bottom: 0; height: 20rem; overflow-y: scroll;"><li class="list-group-item"><button id="copyHsCodes" type="button" class="btn btn-primary">Copy HS Codes</button></li>`;
 
     hsCodes.forEach((code) => {
-      let className = downloadedHsCodes.includes(code) ? "success" : "secondary";
-      className = code === selectValue ? "primary" : className;
-      content += `<li class="list-group-item list-group-item-${className}">${code}</li>`;
+      let className = downloadedHsCodes.includes(code)
+        ? "success"
+        : "secondary";
+      className =
+        code === currentHsCode && className !== "success"
+          ? "primary"
+          : className;
+      list += `<li class="list-group-item list-group-item-${className}">${code}</li>`;
     });
 
-    content += `</ul>`;
-    container.innerHTML += content;
-    document.getElementById("copy_hs_codes").addEventListener("click", () => {
-      copyHsCodes();
+    list += `</ul>`;
+    container.innerHTML += list;
+    $("copyHsCodes").addEventListener("click", async () => {
+      await copyTextToClipboard(downloadedHsCodes.toString());
     });
   } catch {}
 };
@@ -38,8 +124,7 @@ const extractPeriod = async () => {
     const series = await getStorageItem("series");
 
     if (series === "2") {
-      years = document
-        .getElementById("ctl00_PageContent_MyGridView1")
+      years = $("ctl00_PageContent_MyGridView1")
         .getElementsByTagName("tbody")[0]
         .getElementsByTagName("tr")[3]
         .getElementsByTagName("th")[2]
@@ -47,37 +132,28 @@ const extractPeriod = async () => {
         .split("-")
         .map((year) => parseInt(year));
     } else {
-      years = [...document.getElementById("ctl00_PageContent_MyGridView1").getElementsByTagName("tbody")[0].getElementsByTagName("tr")[2].getElementsByTagName("th")].splice(2, 5).map((th) => parseInt(th.innerText.substring(18)));
+      years = [
+        ...$("ctl00_PageContent_MyGridView1")
+          .getElementsByTagName("tbody")[0]
+          .getElementsByTagName("tr")[2]
+          .getElementsByTagName("th"),
+      ]
+        .splice(2, 5)
+        .map((th) => parseInt(th.innerText.substring(18)));
       years = [years[0], years[4]];
     }
 
-    await chrome.runtime.sendMessage({ message: MESSAGE_TYPES.EXTRACT_PERIOD, years });
+    await chrome.runtime.sendMessage({
+      message: MESSAGE_TYPES.EXTRACT_PERIOD,
+      years,
+    });
   } catch {}
 };
 
-chrome.runtime.onMessage.addListener(async ({ message }) => {
-  await loadUtils();
-
-  if (message === MESSAGE_TYPES.TAB_OPENED) {
-    const select = document.getElementById("ctl00_NavigationControl_DropDownList_Product");
-    const subValues = [...select.options].filter((option) => option.value.startsWith(select.value)).map((option) => option.value);
-    const hsCodes = unique([...(await getStorageItem("hsCodes")), select.value, ...subValues]);
-    const downloadedHsCodes = await getStorageItem("downloadedHsCodes");
-    const exportType = await getStorageItem("exportType");
-
-    await setStorageItem("hsCodes", hsCodes);
-    await showDownloadProgress(hsCodes, downloadedHsCodes);
-    showDownloadedFiles(select.value, hsCodes, downloadedHsCodes);
-    await extractPeriod();
-    await copyTextToClipboard(downloadedHsCodes.toString());
-    await sleep(WAITING_TIME);
-
-    if (downloadedHsCodes.includes(select.value)) {
-      chrome.runtime.sendMessage(MESSAGE_TYPES.SKIP_DOWNLOAD);
-
-      return;
-    }
-
-    exportType === "1" ? document.getElementById("ctl00_PageContent_GridViewPanelControl_ImageButton_Text").click() : document.getElementById("ctl00_PageContent_GridViewPanelControl_ImageButton_ExportExcel").click();
-  }
-});
+const handleDownloadClick = (exportType) => {
+  exportType === "1"
+    ? $("ctl00_PageContent_GridViewPanelControl_ImageButton_Text").click()
+    : $(
+        "ctl00_PageContent_GridViewPanelControl_ImageButton_ExportExcel"
+      ).click();
+};
