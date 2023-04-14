@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trademap</title>
     <link rel="stylesheet" href="./css/bs/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="./css/app.css" type="text/css" />
+    <link rel="stylesheet" href="./css/popup.css" type="text/css" />
     <script src="./js/popup.js" type="module"></script>
 </head>
 
@@ -15,18 +15,39 @@
     <div class="container">
         <div class="row mt-2 mb-2">
             <div class="col-12">
-                <div class="mb-4">
+                <div class="mb-2">
+                    <label for="hs_code" class="form-label">HS code</label>
+                    <input id="hs_code" type="text" class="form-control" value="08" />
+                    <div id="hs_code_alert" class="alert alert-danger mt-2 d-none" role="alert">
+                    </div>
+                </div>
+                <div class="mb-2">
                     <label for="type" class="form-label">Imports / Exports</label>
                     <select id="type" class="form-select">
                         <option value="1">Imports</option>
                         <option value="2">Exports</option>
                     </select>
                 </div>
-                <div class="mb-4">
-                    <label for="hscode" class="form-label">HS code</label>
-                    <input id="hscode" type="text" class="form-control" value="08" />
-                    <div id="hscode-alert" class="alert alert-danger mt-2 d-none" role="alert">
+                <div class="mb-2">
+                    <label for="export_type" class="form-label">Export as</label>
+                    <select id="export_type" class="form-select">
+                        <option value="1">Text</option>
+                        <option value="2">Excel</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label for="series" class="form-label">Series</label>
+                    <select id="series" class="form-select">
+                        <option value="2">Trade indicators</option>
+                        <option value="4">Yearly Time Series</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between align-content-center">
+                        <label for="copied_downloaded_hs_codes" class="form-label">Downloaded HS codes</label>
+                        <button id="paste_clipboard" type="button" class="btn btn-primary mb-2">...</button>
                     </div>
+                    <textarea id="copied_downloaded_hs_codes" class="form-control"></textarea>
                 </div>
                 <div class="d-grid gap-2 col-8 mx-auto mb-2">
                     <button id="search" class="btn btn-primary">Search</button>
