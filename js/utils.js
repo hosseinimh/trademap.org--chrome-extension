@@ -1,4 +1,5 @@
 export const BASE_URL = "https://www.trademap.org";
+export const PAGE_PREFIX = "Country_SelProduct";
 
 export const SEARCH_TYPES = {
   DOWNLOADED: "DOWNLOADED",
@@ -12,15 +13,29 @@ export const MESSAGE_TYPES = {
   DOWNLOAD_COMPLETED: "DOWNLOAD_COMPLETED",
 };
 
+export const TRADE_TYPES = {
+  IMPORT: "1",
+  EXPORT: "2",
+};
+
+export const EXPORT_TYPES = {
+  TEXT: "1",
+  EXCEL: "2",
+};
+
+export const SERIES_TYPES = {
+  TRADE_INDICATOR: "2",
+  YEARLY_TIME_SERIES: "4",
+};
+
 export const WAITING_TIME = 5000;
 
 export const openTrademapTab = async (hsCode) => {
   const series = await getStorageItem("series");
-  const type = await getStorageItem("type");
-  const page =
-    series === "2" ? "Country_SelProduct.aspx" : "Country_SelProduct_TS.aspx";
+  const tradeType = await getStorageItem("tradeType");
+  const page = series === SERIES_TYPES.TRADE_INDICATOR ? ".aspx" : "_TS.aspx";
   await openTab(
-    `${BASE_URL}/${page}?nvpm=1%7c%7c%7c%7c%7c${hsCode}%7c%7c%7c2%7c1%7c1%7c${type}%7c${
+    `${BASE_URL}/${PAGE_PREFIX}${page}?nvpm=1%7c%7c%7c%7c%7c${hsCode}%7c%7c%7c6%7c1%7c1%7c${tradeType}%7c${
       series === "2" ? "1" : "2"
     }%7c1%7c2%7c1%7c1%7c1`
   );
@@ -107,6 +122,17 @@ export const pasteToTextArea = (elementName) => {
 };
 
 export const isNumber = (number) => !isNaN(parseInt(number));
+
+export const getNumber = (number) => {
+  let value = "";
+  number = String(number);
+  for (let i = 0; i < number?.length; i++) {
+    if (isNumber(number[i])) {
+      value += number[i];
+    }
+  }
+  return value;
+};
 
 const openTab = async (url) => {
   return await chrome.tabs.create({ url, active: true });

@@ -5,6 +5,11 @@ import {
   pasteToTextArea,
   SEARCH_TYPES,
   isNumber,
+  unique,
+  TRADE_TYPES,
+  EXPORT_TYPES,
+  SERIES_TYPES,
+  getNumber,
 } from "./utils.js";
 
 const searchDownloaded = async () => {
@@ -22,7 +27,7 @@ const searchDownloaded = async () => {
 };
 
 const searchSpecific = async () => {
-  searchInit(SEARCH_TYPES.SPECIFIC);
+  await searchInit(SEARCH_TYPES.SPECIFIC);
   const hsCodes = await getCopiedHsCodes("copiedSpecificHsCodes");
   await setStorageItem("hsCodes", hsCodes);
   await setStorageItem("downloadedHsCodes", []);
@@ -44,10 +49,10 @@ const validateHsCode = (hsCode) => {
 
 const searchInit = async (searchType) => {
   await setStorageItem("searchType", searchType);
-  let type =
+  let tradeType =
     searchType === SEARCH_TYPES.DOWNLOADED
-      ? $("typeDownloaded").value
-      : $("typeSpecific").value;
+      ? $("tradeTypeDownloaded").value
+      : $("tradeTypeSpecific").value;
   let exportType =
     searchType === SEARCH_TYPES.DOWNLOADED
       ? $("exportTypeDownloaded").value
@@ -56,12 +61,25 @@ const searchInit = async (searchType) => {
     searchType === SEARCH_TYPES.DOWNLOADED
       ? $("seriesDownloaded").value
       : $("seriesSpecific").value;
-  type = ["1", "2"].includes(type) ? type : "1";
-  exportType = ["1", "2"].includes(exportType) ? exportType : "1";
-  series = ["2", "4"].includes(series) ? series : "2";
-  await setStorageItem("type", type);
-  await setStorageItem("exportType", exportType);
-  await setStorageItem("series", series);
+  if ([TRADE_TYPES.IMPORT, TRADE_TYPES.EXPORT].includes(tradeType)) {
+    await setStorageItem("tradeType", tradeType);
+  } else {
+    throw Error("tradeType error");
+  }
+  if ([EXPORT_TYPES.TEXT, EXPORT_TYPES.EXCEL].includes(exportType)) {
+    await setStorageItem("exportType", exportType);
+  } else {
+    throw Error("exportType error");
+  }
+  if (
+    [SERIES_TYPES.TRADE_INDICATOR, SERIES_TYPES.YEARLY_TIME_SERIES].includes(
+      series
+    )
+  ) {
+    await setStorageItem("series", series);
+  } else {
+    throw Error("series error");
+  }
 };
 
 const getCopiedHsCodes = async (elementName) => {
@@ -69,7 +87,7 @@ const getCopiedHsCodes = async (elementName) => {
   let hsCodes = [];
   copied.forEach((code) => {
     if (isNumber(code)) {
-      hsCodes = [...hsCodes, code];
+      hsCodes = unique([...hsCodes, getNumber(code)]);
     }
   });
   return hsCodes;

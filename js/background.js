@@ -8,23 +8,23 @@ import {
   closeCurrentTab,
   insertCSS,
   unique,
-  isNumber,
+  PAGE_PREFIX,
 } from "./utils.js";
 
-let index = 0,
-  searchType,
-  exportType,
-  series,
-  yearStart,
-  yearEnd,
-  isTrademapPage,
-  tabId;
+let searchType, exportType, series, yearStart, yearEnd, isTrademapPage, tabId;
 
 chrome.tabs.onUpdated.addListener(async (id, changeInfo, tabInfo) => {
   if (changeInfo.status === "complete" && tabInfo.url.includes(BASE_URL)) {
     try {
       const { hsCode } = urlInfo(tabInfo.url);
       if (hsCode) {
+        if (!tabInfo.url.includes(`${BASE_URL}/${PAGE_PREFIX}`)) {
+          const hsCodes = await getStorageItem("hsCodes");
+          const filterHsCods = hsCodes.filter((code) => code !== hsCode);
+          await setStorageItem("hsCodes", filterHsCods);
+          await next();
+          return;
+        }
         isTrademapPage = true;
         tabId = id;
         await setStorageItem("hsCode", hsCode);
@@ -87,13 +87,14 @@ chrome.runtime.onMessage.addListener(async (message) => {
 });
 
 const next = async () => {
-  const hsCode = await getStorageItem("hsCode");
   const hsCodes = await getStorageItem("hsCodes");
-  if (!isNumber(hsCode) || index >= hsCodes.length - 1) {
-    return;
-  }
-  if (hsCodes[++index]) {
+  const downloadedHsCodes = await getStorageItem("downloadedHsCodes");
+  const notDownloaded = hsCodes.filter(
+    (code) => !downloadedHsCodes.includes(code)
+  );
+  console.log(notDownloaded);
+  if (notDownloaded?.length > 0) {
     closeCurrentTab();
-    await openTrademapTab(hsCodes[index]);
+    await openTrademapTab(notDownloaded[0]);
   }
 };
