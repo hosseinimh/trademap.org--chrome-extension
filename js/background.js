@@ -11,7 +11,7 @@ import {
   PAGE_PREFIX,
 } from "./utils.js";
 
-let searchType, exportType, series, yearStart, yearEnd, isTrademapPage, tabId;
+let exportType, series, yearStart, yearEnd, isTrademapPage, tabId;
 
 chrome.tabs.onUpdated.addListener(async (id, changeInfo, tabInfo) => {
   if (changeInfo.status === "complete" && tabInfo.url.includes(BASE_URL)) {
@@ -28,7 +28,6 @@ chrome.tabs.onUpdated.addListener(async (id, changeInfo, tabInfo) => {
         isTrademapPage = true;
         tabId = id;
         await setStorageItem("hsCode", hsCode);
-        searchType = await getStorageItem("searchType");
         exportType = await getStorageItem("exportType");
         series = await getStorageItem("series");
         await insertCSS(tabId);
@@ -92,7 +91,6 @@ const next = async () => {
   const notDownloaded = hsCodes.filter(
     (code) => !downloadedHsCodes.includes(code)
   );
-  console.log(notDownloaded);
   if (notDownloaded?.length > 0) {
     closeCurrentTab();
     await openTrademapTab(notDownloaded[0]);
