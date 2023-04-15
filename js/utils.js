@@ -9,12 +9,14 @@ export const MESSAGE_TYPES = {
   TAB_OPENED: "TAB_OPENED",
   SKIP_DOWNLOAD: "SKIP_DOWNLOAD",
   EXTRACT_PERIOD: "EXTRACT_PERIOD",
-  COPY_CLIPBOARD: "COPY_CLIPBOARD",
+  DOWNLOAD_COMPLETED: "DOWNLOAD_COMPLETED",
 };
 
 export const WAITING_TIME = 5000;
 
-export const openTrademapTab = async (hsCode, series, type) => {
+export const openTrademapTab = async (hsCode) => {
+  const series = await getStorageItem("series");
+  const type = await getStorageItem("type");
   const page =
     series === "2" ? "Country_SelProduct.aspx" : "Country_SelProduct_TS.aspx";
   await openTab(

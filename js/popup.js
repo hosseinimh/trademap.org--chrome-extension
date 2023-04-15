@@ -4,7 +4,6 @@ import {
   setStorageItem,
   pasteToTextArea,
   SEARCH_TYPES,
-  getStorageItem,
   isNumber,
 } from "./utils.js";
 
@@ -13,36 +12,22 @@ const searchDownloaded = async () => {
   if (!validateHsCode(hsCode)) {
     return;
   }
-  searchInit(SEARCH_TYPES.DOWNLOADED);
-  const copiedDownloadedHsCodes = $("copiedDownloadedHsCodes").value.split(",");
-  let downloadedHsCodes = [];
-  copiedDownloadedHsCodes.forEach((code) => {
-    if (isNumber(code)) {
-      downloadedHsCodes = [...downloadedHsCodes, code];
-    }
-  });
-  const series = await getStorageItem("series");
-  const type = await getStorageItem("type");
+  await searchInit(SEARCH_TYPES.DOWNLOADED);
   await setStorageItem("hsCodes", []);
-  await setStorageItem("downloadedHsCodes", downloadedHsCodes);
-  await openTrademapTab(hsCode, series, type);
+  await setStorageItem(
+    "downloadedHsCodes",
+    await getCopiedHsCodes("copiedDownloadedHsCodes")
+  );
+  await openTrademapTab(hsCode);
 };
 
 const searchSpecific = async () => {
   searchInit(SEARCH_TYPES.SPECIFIC);
-  const copiedSpecificHsCodes = $("copiedSpecificHsCodes").value.split(",");
-  let specificHsCodes = [];
-  copiedSpecificHsCodes.forEach((code) => {
-    if (isNumber(code)) {
-      specificHsCodes = [...specificHsCodes, code];
-    }
-  });
-  const series = await getStorageItem("series");
-  const type = await getStorageItem("type");
-  await setStorageItem("hsCodes", specificHsCodes);
+  const hsCodes = await getCopiedHsCodes("copiedSpecificHsCodes");
+  await setStorageItem("hsCodes", hsCodes);
   await setStorageItem("downloadedHsCodes", []);
-  if (specificHsCodes.length > 0) {
-    await openTrademapTab(specificHsCodes[0], series, type);
+  if (hsCodes.length > 0) {
+    await openTrademapTab(hsCodes[0]);
   }
 };
 
@@ -77,6 +62,17 @@ const searchInit = async (searchType) => {
   await setStorageItem("type", type);
   await setStorageItem("exportType", exportType);
   await setStorageItem("series", series);
+};
+
+const getCopiedHsCodes = async (elementName) => {
+  const copied = $(elementName).value.split(",");
+  let hsCodes = [];
+  copied.forEach((code) => {
+    if (isNumber(code)) {
+      hsCodes = [...hsCodes, code];
+    }
+  });
+  return hsCodes;
 };
 
 $("searchDownloaded").addEventListener("click", searchDownloaded);

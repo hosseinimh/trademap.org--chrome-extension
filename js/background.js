@@ -73,7 +73,7 @@ chrome.downloads.onChanged.addListener(async ({ state }) => {
     downloadedHsCodes = unique([...downloadedHsCodes, hsCode]);
     await setStorageItem("downloadedHsCodes", downloadedHsCodes);
     chrome.tabs.sendMessage(tabId, {
-      message: MESSAGE_TYPES.COPY_CLIPBOARD,
+      message: MESSAGE_TYPES.DOWNLOAD_COMPLETED,
       content: downloadedHsCodes.toString(),
     });
     await next();
@@ -87,8 +87,6 @@ chrome.runtime.onMessage.addListener(async (message) => {
 });
 
 const next = async () => {
-  const series = await getStorageItem("series");
-  const type = await getStorageItem("type");
   const hsCode = await getStorageItem("hsCode");
   const hsCodes = await getStorageItem("hsCodes");
   if (!isNumber(hsCode) || index >= hsCodes.length - 1) {
@@ -96,6 +94,6 @@ const next = async () => {
   }
   if (hsCodes[++index]) {
     closeCurrentTab();
-    await openTrademapTab(hsCodes[index], series, type);
+    await openTrademapTab(hsCodes[index]);
   }
 };

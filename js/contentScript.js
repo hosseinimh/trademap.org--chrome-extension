@@ -15,13 +15,8 @@ chrome.runtime.onMessage.addListener(async ({ message, content }) => {
   await loadUtils();
   if (message === MESSAGE_TYPES.TAB_OPENED) {
     await onTabOpened();
-  } else if (message === MESSAGE_TYPES.COPY_CLIPBOARD) {
-    const hsCode = await getStorageItem("hsCode");
-    const hsCodes = await getStorageItem("hsCodes");
-    const downloadedHsCodes = await getStorageItem("downloadedHsCodes");
-    await copyTextToClipboard(content);
-    showDownloadProgress(hsCodes, downloadedHsCodes);
-    showDownloadedFiles(hsCode, hsCodes, downloadedHsCodes);
+  } else if (message === MESSAGE_TYPES.DOWNLOAD_COMPLETED) {
+    await onDownloadCompleted(content);
   }
 });
 
@@ -33,17 +28,14 @@ const onTabOpened = async () => {
   const hsCode = await getStorageItem("hsCode");
   const hsCodes = await getStorageItem("hsCodes");
   const downloadedHsCodes = await getStorageItem("downloadedHsCodes");
-
   const exportType = await getStorageItem("exportType");
   await showDownloadProgress(hsCodes, downloadedHsCodes);
   showDownloadedFiles(hsCode, hsCodes, downloadedHsCodes);
   await extractPeriod();
-
   if (
     searchType === SEARCH_TYPES.DOWNLOADED &&
     downloadedHsCodes.includes(hsCode)
   ) {
-    console.log("skipped");
     chrome.runtime.sendMessage(MESSAGE_TYPES.SKIP_DOWNLOAD);
     return;
   }
@@ -68,10 +60,8 @@ const handleSpecificHsCodes = async () => {};
 const showDownloadProgress = async (hsCodes, downloadedHsCodes) => {
   try {
     const container = $("div_TradeMap");
-    let progress =
-      container.getElementsByClassName("progress-extension").length > 0
-        ? container.getElementsByClassName("progress-extension")[0]
-        : null;
+    const elements = container.getElementsByClassName("progress-extension");
+    let progress = elements.length > 0 ? elements[0] : null;
     if (progress) {
       container.removeChild(progress);
     }
@@ -90,15 +80,12 @@ const showDownloadProgress = async (hsCodes, downloadedHsCodes) => {
 const showDownloadedFiles = (currentHsCode, hsCodes, downloadedHsCodes) => {
   try {
     const container = $("div_container");
-    let list =
-      container.getElementsByClassName("list-extension").length > 0
-        ? container.getElementsByClassName("list-extension")[0]
-        : null;
+    const elements = container.getElementsByClassName("list-extension");
+    let list = elements.length > 0 ? elements[0] : null;
     if (list) {
       container.removeChild(list);
     }
     list = `<ul class="list-group list-extension" style="position: fixed; right: 0; bottom: 0; height: 20rem; overflow-y: scroll;"><li class="list-group-item"><button id="copyHsCodes" type="button" class="btn btn-primary">Copy HS Codes</button></li>`;
-
     hsCodes.forEach((code) => {
       let className = downloadedHsCodes.includes(code)
         ? "success"
@@ -109,7 +96,6 @@ const showDownloadedFiles = (currentHsCode, hsCodes, downloadedHsCodes) => {
           : className;
       list += `<li class="list-group-item list-group-item-${className}">${code}</li>`;
     });
-
     list += `</ul>`;
     container.innerHTML += list;
     $("copyHsCodes").addEventListener("click", async () => {
@@ -122,7 +108,6 @@ const extractPeriod = async () => {
   try {
     let years;
     const series = await getStorageItem("series");
-
     if (series === "2") {
       years = $("ctl00_PageContent_MyGridView1")
         .getElementsByTagName("tbody")[0]
@@ -142,7 +127,6 @@ const extractPeriod = async () => {
         .map((th) => parseInt(th.innerText.substring(18)));
       years = [years[0], years[4]];
     }
-
     await chrome.runtime.sendMessage({
       message: MESSAGE_TYPES.EXTRACT_PERIOD,
       years,
@@ -156,4 +140,13 @@ const handleDownloadClick = (exportType) => {
     : $(
         "ctl00_PageContent_GridViewPanelControl_ImageButton_ExportExcel"
       ).click();
+};
+
+const onDownloadCompleted = async (content) => {
+  const hsCode = await getStorageItem("hsCode");
+  const hsCodes = await getStorageItem("hsCodes");
+  const downloadedHsCodes = await getStorageItem("downloadedHsCodes");
+  await copyTextToClipboard(content);
+  await showDownloadProgress(hsCodes, downloadedHsCodes);
+  showDownloadedFiles(hsCode, hsCodes, downloadedHsCodes);
 };
