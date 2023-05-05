@@ -1,3 +1,5 @@
+import { EXPORT_TYPES } from "./utils.js";
+import { TRADE_TYPES } from "./utils.js";
 import {
   BASE_URL,
   getStorageItem,
@@ -9,6 +11,7 @@ import {
   insertCSS,
   unique,
   PAGE_PREFIX,
+  SERIES_TYPES,
 } from "./utils.js";
 
 let exportType, series, yearStart, yearEnd, isTrademapPage, tabId;
@@ -20,7 +23,7 @@ chrome.tabs.onUpdated.addListener(async (id, changeInfo, tabInfo) => {
       if (hsCode) {
         if (!tabInfo.url.includes(`${BASE_URL}/${PAGE_PREFIX}`)) {
           const hsCodes = await getStorageItem("hsCodes");
-          const filterHsCods = hsCodes.filter((code) => code !== hsCode);
+          const filterHsCods = hsCodes.filter((code) => code != hsCode);
           await setStorageItem("hsCodes", filterHsCods);
           await next();
           return;
@@ -53,10 +56,12 @@ chrome.downloads.onDeterminingFilename.addListener(async (item, suggest) => {
   try {
     const { hsCode, type } = urlInfo(item.finalUrl);
     const filename = `${hsCode}-${
-      series === "2" ? "Trade indicators" : "Yearly Time Series"
-    }-${yearStart}-${yearEnd}-${type === "1" ? "Imports" : "Exports"}.${
-      exportType === "1" ? "txt" : "xls"
-    }`;
+      series === SERIES_TYPES.TRADE_INDICATOR
+        ? "Trade indicators"
+        : "Yearly Time Series"
+    }-${yearStart}-${yearEnd}-${
+      type === TRADE_TYPES.IMPORT ? "Imports" : "Exports"
+    }.${exportType === EXPORT_TYPES.TEXT ? "txt" : "xls"}`;
     isTrademapPage = true;
 
     suggest({ filename: filename, overwrite: true });

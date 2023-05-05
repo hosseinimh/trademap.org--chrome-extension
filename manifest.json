@@ -1,7 +1,7 @@
 {
   "name": "Trademap",
   "version": "1.0.0",
-  "description": "Download HS codes. Developed by: hosseinimh@gmail.com. Release date: 04/15/2023",
+  "description": "Download HS codes. Developed by: hosseinimh@gmail.com. Release date: 05/05/2023",
   "permissions": [
     "storage",
     "tabs",

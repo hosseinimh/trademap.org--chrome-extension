@@ -37,7 +37,7 @@ const searchSpecific = async () => {
 };
 
 const validateHsCode = (hsCode) => {
-  if (!isNumber(hsCode) || (hsCode.length !== 2 && hsCode.length !== 4)) {
+  if (!isNumber(hsCode) || ![2, 4, 6].includes(hsCode.length)) {
     const alert = $("downloadedAlert");
     alert.textContent = "Please enter a valid HS code.";
     alert.classList.remove("d-none");
@@ -86,7 +86,7 @@ const getCopiedHsCodes = async (elementName) => {
   const copied = $(elementName).value.split(",");
   let hsCodes = [];
   copied.forEach((code) => {
-    if (isNumber(code)) {
+    if (isNumber(code) && [2, 4, 6].includes(code.length)) {
       hsCodes = unique([...hsCodes, getNumber(code)]);
     }
   });

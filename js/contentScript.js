@@ -3,6 +3,8 @@ const loadUtils = async () => {
   ({
     SEARCH_TYPES,
     MESSAGE_TYPES,
+    SERIES_TYPES,
+    EXPORT_TYPES,
     getStorageItem,
     setStorageItem,
     unique,
@@ -107,13 +109,15 @@ const showDownloadedFiles = (currentHsCode, hsCodes, downloadedHsCodes) => {
 const extractPeriod = async () => {
   try {
     let years;
+    const hsCode = await getStorageItem("hsCode");
     const series = await getStorageItem("series");
-    if (series === "2") {
-      years = $("ctl00_PageContent_MyGridView1")
+    if (series === SERIES_TYPES.TRADE_INDICATOR) {
+      years = document
+        .getElementById("ctl00_PageContent_MyGridView1")
         .getElementsByTagName("tbody")[0]
         .getElementsByTagName("tr")[3]
-        .getElementsByTagName("th")[2]
-        .innerText.substring(31, 40)
+        .getElementsByTagName("th")
+        [hsCode.length === 2 ? 2 : 5].innerText.substring(31, 40)
         .split("-")
         .map((year) => parseInt(year));
     } else {
@@ -135,7 +139,7 @@ const extractPeriod = async () => {
 };
 
 const handleDownloadClick = (exportType) => {
-  exportType === "1"
+  exportType === EXPORT_TYPES.TEXT
     ? $("ctl00_PageContent_GridViewPanelControl_ImageButton_Text").click()
     : $(
         "ctl00_PageContent_GridViewPanelControl_ImageButton_ExportExcel"
